@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kütüphane Api</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        #book-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        #book-list li {
+            background: #fff;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: calc(100% - 20px);
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .update-delete-section {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kütüphane Kitapları</h1>
+    <ul id="book-list"></ul>
+
+    <h2>Kitap Ekle</h2>
+    <input type="text" id="title" placeholder="Kitap Adı" />
+    <input type="text" id="author" placeholder="Yazar" />
+    <input type="text" id="isbn" placeholder="ISBN" />
+    <input type="number" id="year" placeholder="Yıl" />
+    <button id="add-book">Ekle</button>
+
+    <div class="update-delete-section">
+        <h2>Kitap Güncelle</h2>
+        <input type="text" id="update-id" placeholder="Güncellenecek Kitap ID'si" />
+        <input type="text" id="update-number" placeholder="Güncellenecek Kitap Numarası" />
+        <input type="text" id="update-title" placeholder="Yeni Kitap Adı" />
+        <input type="text" id="update-author" placeholder="Yeni Yazar" />
+        <input type="text" id="update-isbn" placeholder="Yeni ISBN" />
+        <input type="number" id="update-year" placeholder="Yeni Yıl" />
+        <button id="update-book">Güncelle</button>
+
+        <h2>Kitap Sil</h2>
+        <input type="text" id="delete-id" placeholder="Silinecek Kitap ID'si" />
+        <button id="delete-book">Sil</button>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:8081/api/books'; // API URL
+        function fetchBooks() {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const bookList = document.getElementById('book-list');
+                    bookList.innerHTML = ''; 
+                    data.forEach(book => {
+                        const li = document.createElement('li');
+                        li.textContent = `${book.id}: ${book.title} - ${book.author} (ISBN: ${book.isbn}, Yıl: ${book.year})`;
+                        bookList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Error fetching books:', error));
+        }
+
+      
+        document.getElementById('add-book').addEventListener('click', () => {
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const isbn = document.getElementById('isbn').value;
+            const year = document.getElementById('year').value;
+            const newBook = { title, author, isbn, year };
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newBook)
+            })
+            .then(response => {
+                if (response.ok) {
+                    fetchBooks();
+                    document.getElementById('title').value = ''; 
+                    document.getElementById('author').value = ''; 
+                    document.getElementById('isbn').value = ''; 
+                    document.getElementById('year').value = ''; 
+                }
+            })
+            .catch(error => console.error('Error adding book:', error));
+        });
+
+        
+        document.getElementById('update-book').addEventListener('click', () => {
+            const id = document.getElementById('update-id').value;
+            const number = document.getElementById('update-number').value;
+            const title = document.getElementById('update-title').value;
+            const author = document.getElementById('update-author').value;
+            const isbn = document.getElementById('update-isbn').value;
+            const year = document.getElementById('update-year').value;
+            const updatedBook = { title, author, isbn, year };
+
+            fetch(`${apiUrl}/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedBook)
+            })
+            .then(response => {
+                if (response.ok) {
+                    fetchBooks(); 
+                    document.getElementById('update-id').value = ''; 
+                    document.getElementById('update-number').value = ''; 
+                    document.getElementById('update-title').value = ''; 
+                    document.getElementById('update-author').value = ''; 
+                    document.getElementById('update-isbn').value = ''; 
+                    document.getElementById('update-year').value = ''; 
+                }
+            })
+            .catch(error => console.error('Error updating book:', error));
+        });
+
+      
+        document.getElementById('delete-book').addEventListener('click', () => {
+            const id = document.getElementById('delete-id').value;
+
+            fetch(`${apiUrl}/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.ok) {
+                    fetchBooks(); 
+                    document.getElementById('delete-id').value = ''; 
+                }
+            })
+            .catch(error => console.error('Error deleting book:', error));
+        });
+
+        
+        fetchBooks();
+    </script>
+</body>
+</html>
